@@ -54,7 +54,7 @@ const PROOF_CHAIN = [
     eyebrow: "Approve and record",
     title: "Create evidence that others can verify",
     detail:
-      "A policy owner and engineer approve before the repair can enter code review.",
+      "A policy owner and an engineer approve before the repair can enter code review.",
     artifact: "Signed evidence + confirmed code review + future policy checks",
     technical:
       "Tamper-evident signature (Ed25519) · GitHub code review · automatic policy checks",
@@ -316,7 +316,7 @@ export function NiyamDemo() {
             <span>04 · Keep authority human</span>
             <strong>People approve before any code can change.</strong>
             <ul>
-              <li>Policy-owner and engineer approval</li>
+              <li>Policy owner and engineer approvals</li>
               <li>Tamper-evident signed evidence (Ed25519)</li>
               <li>GitHub code review only after confirmation</li>
               <li>

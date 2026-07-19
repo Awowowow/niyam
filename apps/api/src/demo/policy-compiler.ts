@@ -7,7 +7,7 @@ import {
 import { evaluatePolicy } from "@niyam/rule-engine";
 
 export const DEFAULT_CHALLENGE_POLICY =
-  "Applicants with annual household income up to and including INR 300,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 5 year age relaxation.";
+  "Applicants with annual household income up to and including INR 300,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 5-year age relaxation.";
 
 export interface PolicyAmbiguity {
   code:
@@ -246,7 +246,7 @@ export function compileScholarshipPolicyText(
       message:
         "The disability exception is missing or does not define a numeric relaxation.",
       resolution:
-        "State the exception explicitly, for example ‘Applicants with disabilities receive a 5 year age relaxation’.",
+        "State the exception explicitly, for example ‘Applicants with disabilities receive a 5-year age relaxation’.",
     });
   } else if (age.value !== undefined) {
     const relaxedAge = age.value + relaxation.value;
@@ -461,7 +461,7 @@ export function compileScholarshipPolicyParameters(input: {
   const canonical =
     `Applicants with annual household income up to and including INR ${input.incomeCap} are eligible. ` +
     `Applicants must be ${input.standardAgeLimit} years old or younger. ` +
-    `Applicants with disabilities receive a ${input.disabilityRelaxationYears} year age relaxation.`;
+    `Applicants with disabilities receive a ${input.disabilityRelaxationYears}-year age relaxation.`;
   const compiled = compileScholarshipPolicyText(canonical, input.approvedBy);
   const extraction: PolicyExtractionEvidence = {
     ...input.extraction,

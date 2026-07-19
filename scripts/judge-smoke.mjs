@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 
 const publicUrl = process.env.NIYAM_PUBLIC_URL?.replace(/\/$/, "");
 if (!publicUrl) {
@@ -11,6 +11,7 @@ if (!publicUrl) {
 
 const api = `${publicUrl}/api/niyam`;
 const session = `smoke_${randomUUID().replaceAll("-", "")}`;
+const evidenceOutput = process.env.NIYAM_EVIDENCE_OUTPUT;
 
 async function rawRequest(path, init = {}) {
   const response = await fetch(`${api}${path}`, {
@@ -199,6 +200,10 @@ async function run() {
     }),
   });
   assert(verification.valid === true, "The exported evidence did not verify");
+  if (evidenceOutput) {
+    await writeFile(evidenceOutput, `${JSON.stringify(evidence, null, 2)}\n`);
+    console.log(`Saved verified production evidence to ${evidenceOutput}`);
+  }
   const tamperedPayload = structuredClone(evidence.signedPayload);
   tamperedPayload.authority.automaticMerge = true;
   const tamperedVerification = await request("/v1/policy-ci/evidence/verify", {

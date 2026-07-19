@@ -2,6 +2,12 @@
 
 The presentation has one story: software rejected a person whom the approved policy accepts. Niyam finds the disagreement, repairs the real application, stress-tests the repair, and creates signed evidence after human approval.
 
+## Two-person speaking roles
+
+- **Aarav narrates and owns the clock.** He delivers every spoken line, watches the three-minute timer, and decides whether to use the fallback. There is no mid-demo speaking hand-off.
+- **The teammate drives.** They own the cursor, scrolling, text entry, buttons, and the backup evidence tab. They do not narrate; they keep the interface one action ahead of Aarav's words.
+- **Only one voice is heard.** If a live call fails, Aarav says the rehearsed fallback line while the teammate immediately opens the preloaded signed evidence. This avoids negotiation or overlapping speech on camera.
+
 ## Preflight
 
 Run this before recording and again before presenting:
@@ -11,6 +17,11 @@ NIYAM_PUBLIC_URL=https://d3rre9ztdq52vx.cloudfront.net pnpm smoke:production
 ```
 
 Then open the live application in a fresh Chrome window, keep light mode enabled, click **Start over**, allow microphone permission, and close unrelated tabs and notifications.
+
+Keep two backup artifacts open but hidden behind the live tab:
+
+1. `docs/demo/verified-production-evidence.json`, generated and independently verified from the latest successful production run;
+2. `docs/Niyam-Hackathon-Pitch-Deck.pptx`, opened on the measured-reliability slide.
 
 Keep `output/pdf/niyam-demo-policy.pdf` ready in Finder if you want to demonstrate page-aware PDF extraction instead of dictating the rule.
 
@@ -42,7 +53,7 @@ Say:
 
 In “Check the policy,” type or dictate an unseen change. Recommended wording:
 
-> Applicants with annual household income up to and including INR 437,500 are eligible. Applicants must be 27 years old or younger. Applicants with disabilities receive a 4 year age relaxation.
+> Applicants with annual household income up to and including INR 437,500 are eligible. Applicants must be 27 years old or younger. Applicants with disabilities receive a 4-year age relaxation.
 
 Click **Read and identify rules with AI**. Show the source-linked rules, parameters, textual change, and any ambiguity state. Click **Approve policy interpretation**.
 
@@ -52,7 +63,7 @@ Say:
 
 ### 1:10–1:43 — Repair real code
 
-Keep **Node / TypeScript** selected and click **Repair the application**.
+Keep **Node / TypeScript** selected and click **Repair the code with live AI**.
 
 While it runs, narrate the visible stages: safe code copy, responsible line, minimal change, generated tests, replay. When it completes, show:
 
@@ -98,9 +109,10 @@ Briefly open Policy history only if it is already visible; do not start a second
 ## Recovery paths
 
 - **Microphone permission fails:** type or paste the same complaint. Say that the transcript remains editable by design.
-- **Live AI is slow:** keep narrating the visible stage message. Do not refresh; requests allow up to three minutes.
+- **Live AI is slow:** keep narrating the visible stage message. Do not refresh. The interface retries once with the same approved policy and safety gates.
+- **Live AI fails after the retry:** Aarav says exactly, without apology: “The live call paused, so we’re switching to our last verified replay. The same code diff, 112 tests, human approvals, and signature checks still apply; nothing can merge automatically.” The teammate immediately opens the preloaded signed evidence, then the reliability slide. Do not improvise or attempt a third live call.
 - **AI refuses an ambiguous rule:** this is a successful safety demonstration. Show the unresolved language, then use the prepared precise rule.
-- **Repair fails:** switch Node/Python once only. If it still fails, show the last downloaded signed evidence and the production smoke output; do not fake a live result.
+- **Repair fails for a code reason rather than a connection error:** switch Node/Python once only. If it still fails, use the same verified-replay line and preloaded evidence; do not fake a live result.
 - **PDF contains only scanned images:** paste the policy text. Niyam deliberately reports that OCR is not enabled instead of inventing text.
 
 ## What not to say

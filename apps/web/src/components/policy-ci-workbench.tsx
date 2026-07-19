@@ -64,7 +64,7 @@ type RuntimeLoadState = "loading" | "ready" | "unavailable";
 type RepairCallState = "idle" | "retrying" | "failed";
 
 const ENGLISH_POLICY =
-  "Applicants with annual household income up to and including INR 437,500 are eligible. Applicants must be 27 years old or younger. Applicants with disabilities receive a 4 year age relaxation.";
+  "Applicants with annual household income up to and including INR 437,500 are eligible. Applicants must be 27 years old or younger. Applicants with disabilities receive a 4-year age relaxation.";
 const HINDI_POLICY =
   "₹ 437,500 तक वार्षिक आय वाले आवेदक पात्र हैं। आवेदक की आयु 27 वर्ष या कम होनी चाहिए। दिव्यांग आवेदकों को आयु में 4 वर्ष की छूट मिलेगी।";
 const HINDI_COMPLAINT =
@@ -1376,7 +1376,7 @@ export function PolicyCiWorkbench() {
               <span>
                 {draft.compilation.extraction.mode !==
                 "deterministic-supported-grammar"
-                  ? "AI reading with source links"
+                  ? "AI reading · source sentences linked"
                   : "Local rule reading"}
               </span>
               <strong>{draft.compilation.extraction.summary}</strong>
@@ -1427,7 +1427,7 @@ export function PolicyCiWorkbench() {
                 ? `${blockingIssues.length} unclear policy issues · stopped for human clarification`
                 : draft.status === "approved"
                   ? "Policy owner approved this meaning · code repair unlocked"
-                  : "No unclear wording found · a policy owner must still approve the meaning"}
+                  : "No ambiguous wording found · a policy owner must still approve the meaning"}
             </span>
             <button
               type="button"
@@ -1533,7 +1533,7 @@ export function PolicyCiWorkbench() {
               role={repairCallState === "failed" ? "alert" : "status"}
             >
               {repairCallState === "retrying"
-                ? "The first attempt ended safely. Niyam is retrying once; policy approval, tests, and the no-auto-merge rule remain enforced."
+                ? "The first attempt ended safely. Niyam is retrying once; the approved policy and every safety check remain unchanged. Nothing can merge automatically."
                 : "Live AI did not complete after two attempts. Nothing changed or merged; use Retry live AI repair when the connection is ready."}
             </p>
           ) : null}
@@ -1642,8 +1642,8 @@ export function PolicyCiWorkbench() {
                 <div className="proof-gate-copy">
                   <span>Stage 5 · Approve and save the evidence</span>
                   <strong>
-                    A policy owner and engineer approve. Then Niyam signs the
-                    record.
+                    A policy owner and an engineer approve the repair. Then
+                    Niyam signs the record.
                   </strong>
                 </div>
                 <button
@@ -1923,7 +1923,7 @@ export function PolicyCiWorkbench() {
             ? "Checking live AI · Policy history pending · Evidence settings pending"
             : runtimeLoadState === "unavailable"
               ? "Safety gates active · Policy history unavailable · Evidence settings unavailable"
-              : `${capabilities?.status === "live-ai-configured" ? "AI connected" : "Verified replay"} · Current policy: ${activeVersion?.id ?? "unavailable"} · ${workspace?.signing.algorithm ? `Tamper-evident signature: ${workspace.signing.algorithm}` : "Evidence signature unavailable"}`}
+              : `${capabilities?.status === "live-ai-configured" ? "AI connected" : "Verified replay"} · Policy active today: ${activeVersion?.id ?? "unavailable"} · ${workspace?.signing.algorithm ? `Tamper-evident signature: ${workspace.signing.algorithm}` : "Evidence signature unavailable"}`}
         </code>
       </footer>
     </section>

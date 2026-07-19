@@ -293,7 +293,7 @@ export class DemoService {
     approvedBy?: string;
   }): Promise<Record<string, unknown>> {
     const fallbackText = input.threshold
-      ? `Applicants with annual household income up to and including INR ${new Intl.NumberFormat("en-IN").format(Number(input.threshold))} are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 5 year age relaxation.`
+      ? `Applicants with annual household income up to and including INR ${new Intl.NumberFormat("en-IN").format(Number(input.threshold))} are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 5-year age relaxation.`
       : DEFAULT_CHALLENGE_POLICY;
     const policyText = input.policyText?.trim() || fallbackText;
     const compilation = await this.policyExtraction.compile({

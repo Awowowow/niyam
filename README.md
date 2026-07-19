@@ -4,9 +4,11 @@
 
 [![Niyam Policy Guard](https://github.com/Awowowow/niyam/actions/workflows/niyam-policy-ci.yml/badge.svg)](https://github.com/Awowowow/niyam/actions/workflows/niyam-policy-ci.yml)
 
-[Open the live application](https://d3rre9ztdq52vx.cloudfront.net) · [Browse the public source](https://github.com/Awowowow/niyam)
+[Open the live application](https://d3rre9ztdq52vx.cloudfront.net) · [Browse the public source](https://github.com/Awowowow/niyam) · [Download the seven-slide pitch deck](docs/Niyam-Hackathon-Pitch-Deck.pptx)
 
 The worked example follows a scholarship applicant whose income and age satisfy the policy because of a disability exception—but the application rejects her because its code forgot that exception. Niyam connects the person, the policy, the faulty line, the repair, the tests, and the approvals in one visible chain.
+
+![Niyam live application showing a policy-qualified applicant rejected by software](docs/niyam-live-opening.png)
 
 Niyam is not a policy chatbot and the AI is not the eligibility judge. AI reads varied policy language and proposes a small code change. A repeatable rule engine determines the expected result, tests verify the repair, and people retain authority over policy meaning and code review.
 
@@ -66,7 +68,7 @@ The deployed live-AI build was exercised on 17 July 2026 with fresh sessions:
 - **5/5** clean, full five-step journeys completed after using **Start over**.
 - Live repair retries once with the same approved policy and safety gates; if both attempts fail, the interface reports the failure and confirms that no code changed or merged.
 
-The repeatable production test is in [`scripts/live-ai-reliability.mjs`](scripts/live-ai-reliability.mjs).
+The repeatable production test is in [`scripts/live-ai-reliability.mjs`](scripts/live-ai-reliability.mjs). The checked-in [verified production evidence](docs/demo/verified-production-evidence.json) is the preloaded demo fallback; it was exported with public identities redacted and independently signature-verified before being saved.
 
 ## Supported scope and honest limits
 

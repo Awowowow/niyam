@@ -156,7 +156,7 @@ function canonicalPolicyText(
   if (!income || age === undefined || relaxation === undefined) {
     return policyText;
   }
-  return `Applicants with annual household income up to and including INR ${income} are eligible. Applicants must be ${age} years old or younger. Applicants with disabilities receive a ${relaxation} year age relaxation.`;
+  return `Applicants with annual household income up to and including INR ${income} are eligible. Applicants must be ${age} years old or younger. Applicants with disabilities receive a ${relaxation}-year age relaxation.`;
 }
 
 interface PolicySessionState {
@@ -364,21 +364,21 @@ export class PolicyCiService {
   private seedTimeMachine(): void {
     const seeds = [
       {
-        text: "Applicants with annual household income up to and including INR 250,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 3 year age relaxation.",
+        text: "Applicants with annual household income up to and including INR 250,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 3-year age relaxation.",
         from: "2026-01-01",
         to: "2026-03-31",
         note: "Original scholarship rules",
         code: "decision-node@8c2f19a",
       },
       {
-        text: "Applicants with annual household income up to and including INR 300,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 3 year age relaxation.",
+        text: "Applicants with annual household income up to and including INR 300,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 3-year age relaxation.",
         from: "2026-04-01",
         to: "2026-06-30",
         note: "April income amendment",
         code: "decision-node@c041b7e",
       },
       {
-        text: "Applicants with annual household income up to and including INR 300,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 5 year age relaxation.",
+        text: "Applicants with annual household income up to and including INR 300,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 5-year age relaxation.",
         from: "2026-07-01",
         note: "July disability-relaxation amendment",
         code: "production-income-lt-age-25-no-exception",
