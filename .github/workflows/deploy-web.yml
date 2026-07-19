@@ -1,0 +1,101 @@
+name: Deploy Niyam web
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: niyam-production-web-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy the production web image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AWS_REGION: us-east-2
+      STACK_NAME: niyam-production
+      WEB_REPOSITORY: niyam-web
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.NIYAM_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.NIYAM_AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.NIYAM_AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push the ARM64 web image
+        id: image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          IMAGE_URI="${ECR_REGISTRY}/${WEB_REPOSITORY}:${GITHUB_SHA::7}-${GITHUB_RUN_ID}"
+          docker buildx build \
+            --platform linux/arm64 \
+            --file apps/web/Dockerfile \
+            --tag "${IMAGE_URI}" \
+            --push \
+            .
+          echo "uri=${IMAGE_URI}" >> "${GITHUB_OUTPUT}"
+
+      - name: Update the existing CloudFormation stack
+        env:
+          WEB_IMAGE: ${{ steps.image.outputs.uri }}
+        run: |
+          aws cloudformation update-stack \
+            --stack-name "${STACK_NAME}" \
+            --use-previous-template \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameters \
+              ParameterKey=ApiImage,UsePreviousValue=true \
+              ParameterKey=WebImage,ParameterValue="${WEB_IMAGE}" \
+              ParameterKey=VerificationImage,UsePreviousValue=true \
+              ParameterKey=EvidencePrivateKeySecretArn,UsePreviousValue=true \
+              ParameterKey=OriginVerifySecret,UsePreviousValue=true \
+              ParameterKey=DesiredCount,UsePreviousValue=true
+          aws cloudformation wait stack-update-complete --stack-name "${STACK_NAME}"
+
+      - name: Wait for ECS and invalidate CloudFront
+        run: |
+          CLUSTER_NAME="$(aws cloudformation describe-stacks \
+            --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
+            --output text)"
+          SERVICE_NAME="$(aws cloudformation describe-stacks \
+            --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='ServiceName'].OutputValue" \
+            --output text)"
+          DISTRIBUTION_ID="$(aws cloudformation describe-stacks \
+            --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" \
+            --output text)"
+          aws ecs wait services-stable \
+            --cluster "${CLUSTER_NAME}" \
+            --services "${SERVICE_NAME}"
+          INVALIDATION_ID="$(aws cloudfront create-invalidation \
+            --distribution-id "${DISTRIBUTION_ID}" \
+            --paths '/*' \
+            --query 'Invalidation.Id' \
+            --output text)"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "${DISTRIBUTION_ID}" \
+            --id "${INVALIDATION_ID}"
+
