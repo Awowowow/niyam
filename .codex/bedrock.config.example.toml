@@ -1,0 +1,10 @@
+# Copy the relevant values to your trusted Codex configuration.
+model_provider = "amazon-bedrock"
+model = "openai.gpt-5.6-sol"
+model_reasoning_effort = "high"
+
+# Optional when you use the AWS SDK credential chain.
+[model_providers.amazon-bedrock.aws]
+profile = "default"
+# Set this to a commercial AWS Region where the selected model is available.
+region = "us-east-2"

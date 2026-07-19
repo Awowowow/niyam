@@ -1,0 +1,19 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Scholarship decision example",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/decision": {
+      "post": {
+        "operationId": "decideScholarship",
+        "responses": {
+          "200": {
+            "description": "Decision response"
+          }
+        }
+      }
+    }
+  }
+}

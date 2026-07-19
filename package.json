@@ -1,0 +1,30 @@
+{
+  "name": "niyam",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Policy-to-code verification with deterministic evidence.",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:solver": "node scripts/python-tool.mjs -m uvicorn app.main:app --app-dir apps/verification --host 127.0.0.1 --port 8000",
+    "policy-ci:guard": "node scripts/policy-ci-guard.mjs",
+    "smoke:production": "node scripts/judge-smoke.mjs",
+    "test": "turbo run test",
+    "test:examples": "pnpm --dir examples/decision-node test && node scripts/python-tool.mjs -m pytest -q examples/decision-python",
+    "test:solver": "node scripts/python-tool.mjs -m pytest -q apps/verification/tests",
+    "typecheck": "turbo run typecheck",
+    "check": "pnpm typecheck && pnpm test && pnpm test:examples && pnpm test:solver && pnpm build && pnpm policy-ci:guard",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "prettier": "^3.6.2",
+    "turbo": "^2.6.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.8"
+  }
+}

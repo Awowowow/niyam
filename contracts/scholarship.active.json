@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0",
+  "id": "scholarship-active",
+  "version": 3,
+  "effectiveFrom": "2026-07-01",
+  "documentHash": "sha256:8c9d312a41a319cb4ef7f7f587ba03fac7245b8e40c0f4f1b64b7a6941453302",
+  "parameters": {
+    "incomeCap": 300000,
+    "standardAgeLimit": 25,
+    "disabilityAgeLimit": 30
+  },
+  "requiredOutcomeCodes": {
+    "pass": "ELIGIBLE",
+    "fail": "INELIGIBLE"
+  }
+}

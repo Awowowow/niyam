@@ -1,0 +1,20 @@
+{
+  "name": "@niyam/boundary-generator",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@niyam/policy-ir": "workspace:*",
+    "@niyam/rule-engine": "workspace:*",
+    "decimal.js": "^10.6.0"
+  }
+}

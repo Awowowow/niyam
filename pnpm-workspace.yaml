@@ -1,0 +1,14 @@
+packages:
+  - apps/*
+  - packages/*
+
+overrides:
+  postcss: 8.5.19
+
+allowBuilds:
+  "@scarf/scarf": false
+  sharp: true
+
+onlyBuiltDependencies:
+  - "@nestjs/core"
+  - esbuild

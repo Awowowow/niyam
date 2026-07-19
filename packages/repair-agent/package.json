@@ -1,0 +1,22 @@
+{
+  "name": "@niyam/repair-agent",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@aws-crypto/sha256-js": "^5.2.0",
+    "@aws-sdk/credential-providers": "^3.1087.0",
+    "@smithy/protocol-http": "^5.5.9",
+    "@smithy/signature-v4": "^5.6.5",
+    "zod": "^4.1.12"
+  }
+}

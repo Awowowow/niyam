@@ -1,0 +1,11 @@
+{
+  "name": "niyam-node-decision-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --check src/eligibility.mjs && node --check src/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "start": "node src/server.mjs"
+  }
+}

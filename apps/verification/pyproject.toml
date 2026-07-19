@@ -1,0 +1,22 @@
+[project]
+name = "niyam-verification"
+version = "0.1.0"
+description = "Bounded Z3 counterexample service for Niyam policy contracts"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "pydantic>=2.10,<3",
+  "pypdf>=5.4,<6",
+  "uvicorn[standard]>=0.34,<1",
+  "z3-solver>=4.13,<5",
+]
+
+[project.optional-dependencies]
+test = ["httpx>=0.28,<1", "pytest>=8.3,<9"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+  "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]

@@ -1,0 +1,39 @@
+services:
+  verification:
+    build:
+      context: .
+      dockerfile: apps/verification/Dockerfile
+    ports: ["8000:8000"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PORT: 4000
+      NIYAM_SOLVER_URL: http://verification:8000
+      NIYAM_ENABLE_CODEX_REPAIRS: "false"
+    ports: ["4000:4000"]
+    depends_on:
+      verification:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_NIYAM_API_URL: http://localhost:4000/api
+    ports: ["3000:3000"]
+    depends_on: [api]
