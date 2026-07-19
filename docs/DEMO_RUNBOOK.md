@@ -1,12 +1,12 @@
 # Niyam three-minute demo runbook
 
-The presentation has one story: software rejected a person whom the approved policy accepts. Niyam finds the disagreement, repairs the real application, stress-tests the repair, and creates signed evidence after human approval.
+Niyam is an AI-assisted, human-gated workflow that finds when decision software disagrees with an approved written policy, proposes a repair, tests that repair, and creates signed evidence. The worked scholarship rejection is the example; Niyam is the product.
 
-## Two-person speaking roles
+## Fixed roles
 
-- **Aarav narrates and owns the clock.** He delivers every spoken line, watches the three-minute timer, and decides whether to use the fallback. There is no mid-demo speaking hand-off.
-- **The teammate drives.** They own the cursor, scrolling, text entry, buttons, and the backup evidence tab. They do not narrate; they keep the interface one action ahead of Aarav's words.
-- **Only one voice is heard.** If a live call fails, Aarav says the rehearsed fallback line while the teammate immediately opens the preloaded signed evidence. This avoids negotiation or overlapping speech on camera.
+- **Person 1 — laptop driver:** controls Chrome, clicks, scrolls, and keeps the next result visible. They say nothing during the recording.
+- **Person 2 — speaker and timekeeper:** delivers every spoken line and watches the timer. They never touch the laptop.
+- Rehearse the sequence until the driver can move from the speaker's final word in each row. Never discuss the next click on camera.
 
 ## Preflight
 
@@ -16,105 +16,89 @@ Run this before recording and again before presenting:
 NIYAM_PUBLIC_URL=https://d3rre9ztdq52vx.cloudfront.net pnpm smoke:production
 ```
 
-Then open the live application in a fresh Chrome window, keep light mode enabled, click **Start over**, allow microphone permission, and close unrelated tabs and notifications.
+Then:
 
-Keep two backup artifacts open but hidden behind the live tab:
+1. Open the production site in a normal Chrome window at 100% zoom and use light mode.
+2. Click **Start over**, close unrelated tabs, silence notifications, and keep the cursor away from important text.
+3. Confirm the status says that live AI is connected and `policy-v3` is active.
+4. Keep the most recent verified evidence JSON and the reliability slide open in background tabs for the failure fallback only.
+5. Start the recording with the hero and rejected application card both visible.
 
-1. `docs/demo/verified-production-evidence.json`, generated and independently verified from the latest successful production run;
-2. `docs/Niyam-Hackathon-Pitch-Deck.pptx`, opened on the measured-reliability slide.
+## Exact two-person script
 
-Keep `output/pdf/niyam-demo-policy.pdf` ready in Finder if you want to demonstrate page-aware PDF extraction instead of dictating the rule.
+### 0:00–0:22 — The silent failure
 
-## Exact timeline
+**Driver:** Hold on the hero for two seconds. Slowly reveal the rejected application card. Do not click yet.
 
-### 0:00–0:18 — State the human problem
+**Speaker:**
 
-Show the opening contradiction. Say:
+> This is Niyam. It catches software that silently breaks the written rules it is supposed to follow. In this worked example, the approved scholarship policy accepts this applicant, but the deployed application rejects her. Nothing crashed. One valid person was simply denied.
 
-> This applicant qualifies under the written scholarship policy, but the software rejected her. Nothing crashed. The code simply implemented the rule incorrectly.
+### 0:22–0:48 — Check the original decision
 
-Do not explain the architecture yet.
+**Driver:** Click **Review this rejected application**. Keep the prefilled complaint, date, **Use voice**, and **Check this decision** visible. Click **Check this decision**, then place the cursor beside the green **ELIGIBLE** and red **INELIGIBLE** results. Pause on the `policy-v3` receipt.
 
-### 0:18–0:42 — Let the applicant speak
+**Speaker:**
 
-Click **Review this rejected application**, then **Use voice** under “Tell your story.” Speak the Hindi complaint or use the prepared transcript. Click **Check this decision**.
+> She can speak or type what happened in Hindi or English. Niyam extracts the facts, finds the policy version active on her decision date, and replays both decisions. The approved rule says eligible. Production said ineligible. AI helps understand her words; it never decides eligibility.
 
-Point only to:
+### 0:48–1:18 — Confirm the governing rules
 
-- policy result: eligible;
-- software result: rejected;
-- policy version active on the decision date.
+**Driver:** Scroll to **Confirm the governing rules**. Pause on **Already registered by the organisation** and the `policy-v3` date. Click **Extract rules from policy-v3 with AI**. When the source-linked rules appear, show the income, age, and disability exception. Click **Approve these rules**.
 
-Say:
+**Speaker:**
 
-> The model helps understand her words. It never decides eligibility. The approved executable policy does that deterministically.
+> The applicant does not upload her organisation's policy. Niyam already selected policy-v3 from policy history. AI turns its exact sentences into cited, testable rules. If wording is unclear, Niyam stops instead of guessing. A policy owner must confirm the meaning before any code can change.
 
-### 0:42–1:10 — Give the judge control
+### 1:18–1:55 — Repair the application code
 
-In “Check the policy,” type or dictate an unseen change. Recommended wording:
+**Driver:** Keep **Node / TypeScript** selected. Click **Repair the code with live AI**. While it runs, leave the animated status visible. On completion, show **Faulty line found here**, the code diff, then **Before the repair: INELIGIBLE → After the repair: ELIGIBLE**.
 
-> Applicants with annual household income up to and including INR 437,500 are eligible. Applicants must be 27 years old or younger. Applicants with disabilities receive a 4-year age relaxation.
+**Speaker:**
 
-Click **Read and identify rules with AI**. Show the source-linked rules, parameters, textual change, and any ambiguity state. Click **Approve policy interpretation**.
+> Now the repair agent works on an isolated copy of the real eligibility code. It finds the faulty line, proposes the smallest reviewable change, and generates tests from the approved rules. The agent cannot rewrite the policy, weaken the tests, or merge its own code. Here, the same application changes from ineligible to eligible.
 
-Say:
+### 1:55–2:20 — Try to break the repair
 
-> AI translates the document into cited rules. A policy owner confirms the meaning before any code can change.
+**Driver:** Scroll just enough to center **Stage 4 · Verify the repair** and **Independent edge-case search**. Trace the three numbers: `112`, `4/4`, and `0`.
 
-### 1:10–1:43 — Repair real code
+**Speaker:**
 
-Keep **Node / TypeScript** selected and click **Repair the code with live AI**.
+> Fixing one example is not enough. Niyam reruns the existing application tests, generates policy tests, then independently searches the boundaries and rule interactions for another failure. One hundred and twelve edge cases, every supported rule path covered, zero counterexamples found.
 
-While it runs, narrate the visible stages: safe code copy, responsible line, minimal change, generated tests, replay. When it completes, show:
+### 2:20–2:45 — Keep authority human
 
-- the source location;
-- the real Git diff;
-- `INELIGIBLE → ELIGIBLE`;
-- the isolated branch and commit.
+**Driver:** Click **Policy owner approval**, **Engineer approval**, and **Create and verify evidence**. Pause on **Signature and evidence contents verified**. Briefly point to **Download verification report (PDF)** and **Download signed data (JSON)**; do not open either file during the main take.
 
-Say:
+**Speaker:**
 
-> The agent may propose code, but it cannot change the policy or the tests that judge its work.
+> Two separate people still approve the repair: the policy owner for meaning, and the engineer for code. Only then does Niyam sign the evidence and verify its signature and contents. Judges can read the PDF; machines can verify the signed JSON. Nothing merges automatically.
 
-### 1:43–2:10 — Stress-test the repair
+### 2:45–3:00 — Define the category and stop
 
-Show the verification ledger and the adversarial review:
+**Driver:** Hold on the verified evidence. Make no more clicks.
 
-- existing tests passed;
-- generated policy tests passed;
-- 112 independently generated edge cases;
-- every supported rule path covered;
-- zero remaining counterexamples.
+**Speaker:**
 
-Say:
+> Normal CI asks whether code matches developer expectations. Niyam asks whether software decisions match the rules people were promised. Before software says no, it should prove why.
 
-> The repair agent does not grade itself. Niyam runs repeatable checks against the repaired executable and searches separately for a case that still breaks it.
+Stop immediately. Do not add a thank-you or feature list after the closing line.
 
-### 2:10–2:36 — Keep authority human
+## Exact failure fallback
 
-Click **Policy owner approval**, then **Engineer approval**, then **Create and verify evidence**.
+If the live repair call retries or fails, the driver waits for the visible retry. If the verified replay appears, they continue normally. If the call still cannot complete, the driver opens the preloaded verified evidence tab while the speaker says exactly:
 
-Point to **Verified** and the Ed25519 fingerprint. Download the JSON only if time allows.
+> The live call paused, so we are switching to our last verified replay. The same code change, 112 tests, human approvals, and signature checks still apply. Nothing can merge automatically.
 
-Say:
+Do not apologize, refresh repeatedly, explain AWS, or attempt a third call.
 
-> The API itself enforces both approvals. The exported record is signed, then its signature, content hash, and public-key fingerprint are verified again. Niyam never merges automatically.
+## Other recovery paths
 
-### 2:36–3:00 — Define the category
+- **Microphone permission fails:** keep the prepared complaint and continue. The core proof does not depend on voice input.
+- **AI refuses unclear wording:** show the clarification message. This is the intended safety gate, then reset to the prepared policy.
+- **PDF is scanned and has no extractable text:** use the stored policy. Niyam reports missing text instead of inventing it.
+- **A click is missed:** the speaker pauses at the end of the current sentence; the driver catches up silently.
 
-Briefly open Policy history only if it is already visible; do not start a second workflow. Close with:
+## Claims to avoid
 
-> Normal CI asks whether code behaves the way developers expected. Niyam asks whether it behaves the way the approved policy requires. It finds the decision the code got wrong, repairs the system, and carries the approved rule into every future release.
-
-## Recovery paths
-
-- **Microphone permission fails:** type or paste the same complaint. Say that the transcript remains editable by design.
-- **Live AI is slow:** keep narrating the visible stage message. Do not refresh. The interface retries once with the same approved policy and safety gates.
-- **Live AI fails after the retry:** Aarav says exactly, without apology: “The live call paused, so we’re switching to our last verified replay. The same code diff, 112 tests, human approvals, and signature checks still apply; nothing can merge automatically.” The teammate immediately opens the preloaded signed evidence, then the reliability slide. Do not improvise or attempt a third live call.
-- **AI refuses an ambiguous rule:** this is a successful safety demonstration. Show the unresolved language, then use the prepared precise rule.
-- **Repair fails for a code reason rather than a connection error:** switch Node/Python once only. If it still fails, use the same verified-replay line and preloaded evidence; do not fake a live result.
-- **PDF contains only scanned images:** paste the policy text. Niyam deliberately reports that OCR is not enabled instead of inventing text.
-
-## What not to say
-
-Do not claim universal formal verification, perfect legal interpretation, guaranteed-safe patches, real population impact, autonomous deployment, or that an LLM decides eligibility.
+Do not call the worked example a real applicant. Do not claim universal legal interpretation, universal policy support, perfect formal verification, real population impact, autonomous deployment, automatic GitHub merge, or that an LLM decides eligibility.
