@@ -9,6 +9,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import {
   runBedrockSourceRepair,
@@ -92,6 +93,22 @@ export class RepositoryRepairService {
     if (!result.approvals.some((item) => item.role === "engineer")) {
       throw new BadRequestException(
         "An engineer approval is required before publishing",
+      );
+    }
+    const githubToken = process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+    if (!githubToken) {
+      throw new ServiceUnavailableException(
+        "GitHub publishing is not connected in this public demonstration. Download the verified patch and signed evidence for your normal code-review process.",
+      );
+    }
+    try {
+      await execFileAsync("gh", ["--version"], {
+        timeout: 5_000,
+        maxBuffer: 1024 * 1024,
+      });
+    } catch {
+      throw new ServiceUnavailableException(
+        "GitHub publishing is configured but the GitHub CLI is unavailable. Download the verified patch and signed evidence instead.",
       );
     }
     const remote = `https://github.com/${input.repository}.git`;
@@ -223,6 +240,18 @@ export class RepositoryRepairService {
         repository: input.repository,
       };
       return result;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ServiceUnavailableException
+      ) {
+        throw error;
+      }
+      const failure = error as Error & { stderr?: string };
+      const detail = (failure.stderr ?? failure.message).trim();
+      throw new BadRequestException(
+        `GitHub could not open this code review. Confirm that the repository exists, the base branch is correct, and the connected account can push to it.${detail ? ` GitHub said: ${detail.slice(0, 240)}` : ""}`,
+      );
     } finally {
       await rm(publicationRoot, { recursive: true, force: true });
     }

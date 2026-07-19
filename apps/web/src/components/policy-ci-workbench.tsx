@@ -16,7 +16,6 @@ import {
   getPolicyCiWorkspace,
   getSignedRepairEvidence,
   ingestPolicyDocument,
-  publishRepairPullRequest,
   queryTimeMachine,
   reconstructComplaint,
   resetJudgeWorkspace,
@@ -35,6 +34,10 @@ import {
   type SignedEvidence,
   type TimeMachineDecision,
 } from "../lib/policy-ci-api";
+import {
+  buildEvidenceReportPdf,
+  evidenceReportFilename,
+} from "../lib/evidence-report";
 import { ArrowIcon, CheckIcon, DocumentIcon, LockIcon, MicIcon } from "./icons";
 
 interface RecognitionResult {
@@ -64,12 +67,12 @@ type RuntimeLoadState = "loading" | "ready" | "unavailable";
 type RepairCallState = "idle" | "retrying" | "failed";
 
 const ENGLISH_POLICY =
-  "Applicants with annual household income up to and including INR 437,500 are eligible. Applicants must be 27 years old or younger. Applicants with disabilities receive a 4-year age relaxation.";
+  "Applicants with annual household income up to and including INR 300,000 are eligible. Applicants must be 25 years old or younger. Applicants with disabilities receive a 5-year age relaxation.";
 const HINDI_POLICY =
-  "₹ 437,500 तक वार्षिक आय वाले आवेदक पात्र हैं। आवेदक की आयु 27 वर्ष या कम होनी चाहिए। दिव्यांग आवेदकों को आयु में 4 वर्ष की छूट मिलेगी।";
+  "₹ 300,000 तक वार्षिक आय वाले आवेदक पात्र हैं। आवेदक की आयु 25 वर्ष या कम होनी चाहिए। दिव्यांग आवेदकों को आयु में 5 वर्ष की छूट मिलेगी।";
 const HINDI_COMPLAINT =
   "मेरी आय ₹ 300,000 है, मेरी आयु 30 वर्ष है और मैं दिव्यांग हूँ, लेकिन आवेदन अस्वीकार हुआ।";
-const JUDGE_SESSION_KEY = "niyam-judge-session-v3";
+const JUDGE_SESSION_KEY = "niyam-judge-session-v4";
 
 function compactHash(value?: string): string {
   if (!value) return "—";
@@ -78,6 +81,16 @@ function compactHash(value?: string): string {
 
 function formatIncome(value: number): string {
   return `₹${new Intl.NumberFormat("en-IN").format(value)}`;
+}
+
+function formatPolicyDate(value?: string): string {
+  if (!value) return "an unavailable date";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${value}T00:00:00.000Z`));
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -99,6 +112,20 @@ function downloadText(
   content: string,
 ): void {
   const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadBytes(
+  filename: string,
+  mimeType: string,
+  content: Uint8Array,
+): void {
+  const bytes = new Uint8Array(content);
+  const url = URL.createObjectURL(new Blob([bytes.buffer], { type: mimeType }));
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
@@ -159,7 +186,7 @@ export function PolicyCiWorkbench() {
     useState<PolicyDocumentResult | null>(null);
   const [policyLanguage, setPolicyLanguage] = useState<PolicyLanguage>("en");
   const [policyText, setPolicyText] = useState(ENGLISH_POLICY);
-  const [effectiveFrom, setEffectiveFrom] = useState("2026-08-01");
+  const [effectiveFrom, setEffectiveFrom] = useState("2026-07-01");
   const [draft, setDraft] = useState<PolicyDraft | null>(null);
   const [approval, setApproval] = useState<DraftApprovalResult | null>(null);
   const [repairTarget, setRepairTarget] = useState<"node" | "python">("node");
@@ -183,8 +210,6 @@ export function PolicyCiWorkbench() {
   const [transcriptTarget, setTranscriptTarget] =
     useState<DictationTarget | null>(null);
   const [highContrast, setHighContrast] = useState(false);
-  const [repository, setRepository] = useState("");
-  const [confirmPublish, setConfirmPublish] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [runtimeLoadState, setRuntimeLoadState] =
     useState<RuntimeLoadState>("loading");
@@ -339,6 +364,12 @@ export function PolicyCiWorkbench() {
   );
 
   const activeVersion = workspace?.activeVersion;
+  const governingVersion = complaintResult?.governingVersion ?? activeVersion;
+  const registeredPolicyText = activeVersion?.policyText ?? ENGLISH_POLICY;
+  const isDifferentPolicy =
+    Boolean(documentResult) ||
+    policyLanguage !== "en" ||
+    policyText.trim() !== registeredPolicyText.trim();
   const blockingIssues = useMemo(
     () =>
       draft?.ambiguities.filter((issue) => issue.severity === "blocking") ?? [],
@@ -359,8 +390,8 @@ export function PolicyCiWorkbench() {
     },
     {
       id: "policy-change",
-      title: "Check the policy",
-      description: "Review the exact rule and approve its meaning.",
+      title: "Confirm the governing rules",
+      description: "A policy owner confirms the stored rule used for repair.",
       complete: draft?.status === "approved",
     },
     {
@@ -409,9 +440,10 @@ export function PolicyCiWorkbench() {
       ? {
           target: "policy-change",
           kicker: "Story understood",
-          title: "Now check the written policy",
-          detail: "Upload it, edit the sample, or say a new rule aloud.",
-          label: "Check the policy",
+          title: "Now confirm the governing rules",
+          detail:
+            "Niyam already selected the stored policy for this decision. A policy owner reviews its exact wording.",
+          label: "Confirm the rules",
         }
       : draft.status !== "approved"
         ? {
@@ -473,7 +505,7 @@ export function PolicyCiWorkbench() {
                     kicker: "Journey complete",
                     title: "The verified repair evidence is ready",
                     detail:
-                      "Download the signed evidence or open the approved code review.",
+                      "Download a readable PDF, the signed JSON, or the verified code patch.",
                     label: "Review the evidence",
                   };
 
@@ -774,25 +806,6 @@ export function PolicyCiWorkbench() {
     }
   };
 
-  const publishPullRequest = async () => {
-    if (!repair || !confirmPublish || !repository) return;
-    setBusy("publish");
-    setStatus(`Opening ${repair.branch} for code review in ${repository}…`);
-    try {
-      const result = await publishRepairPullRequest(repair.runId, repository);
-      setRepair(result);
-      setStatus(`GitHub code review opened: ${result.pullRequest.url}`);
-    } catch (error) {
-      setStatus(
-        error instanceof Error
-          ? error.message
-          : "Pull request publishing failed",
-      );
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const runTimeMachine = async () => {
     setBusy("history");
     try {
@@ -875,7 +888,7 @@ export function PolicyCiWorkbench() {
       setDocumentResult(null);
       setPolicyLanguage("en");
       setPolicyText(ENGLISH_POLICY);
-      setEffectiveFrom("2026-08-01");
+      setEffectiveFrom("2026-07-01");
       setDraft(null);
       setApproval(null);
       setRepairTarget("node");
@@ -890,8 +903,6 @@ export function PolicyCiWorkbench() {
       setTranscript("");
       setLiveTranscript("");
       setTranscriptTarget(null);
-      setRepository("");
-      setConfirmPublish(false);
       setStatus(result.message);
       loadWorkspace();
       window.scrollTo({
@@ -1197,6 +1208,18 @@ export function PolicyCiWorkbench() {
                 <strong>{complaintResult.productionOutcome}</strong>
               </div>
               <p>{complaintResult.explanation}</p>
+              <p className="governing-policy-receipt">
+                <CheckIcon />
+                <span>
+                  Checked against{" "}
+                  <strong>{complaintResult.governingVersion.id}</strong>, active
+                  from{" "}
+                  {formatPolicyDate(
+                    complaintResult.governingVersion.effectiveFrom,
+                  )}
+                  .
+                </span>
+              </p>
               <footer>
                 <button type="button" onClick={readExplanation}>
                   Read explanation aloud
@@ -1222,10 +1245,11 @@ export function PolicyCiWorkbench() {
           <header>
             <div className="intake-title">
               <span>
-                <b>2</b> Check the policy
+                <b>2</b> Confirm the governing rules
               </span>
               <small>
-                Upload the document, edit the example, or speak a new rule.
+                Policy-owner step · confirm the exact rule before any code can
+                change.
               </small>
             </div>
             <div className="language-toggle" aria-label="Policy language">
@@ -1241,44 +1265,66 @@ export function PolicyCiWorkbench() {
               ))}
             </div>
           </header>
-          <label className="document-drop" htmlFor="policy-document">
-            <DocumentIcon />
-            <span>
-              <strong>Upload policy PDF or text</strong>
-              <small>
-                Niyam keeps the source page and records a tamper-detection
-                fingerprint (SHA-256).
-              </small>
-            </span>
-            <input
-              id="policy-document"
-              type="file"
-              accept="application/pdf,text/plain,.pdf,.txt"
-              disabled={busy === "document"}
-              onChange={(event) => void uploadDocument(event.target.files?.[0])}
-            />
-          </label>
-          {documentResult ? (
-            <div className="document-receipt">
-              <strong>{documentResult.filename}</strong>
-              <span>
-                {documentResult.pages.length} pages ·{" "}
-                {documentResult.extraction}
-              </span>
-              <code>{compactHash(documentResult.sourceHash)}</code>
-            </div>
-          ) : (
+          <div className="governing-policy-context">
+            <span>Already registered by the organisation</span>
+            <strong>
+              {governingVersion?.id ?? "The governing policy"} applies to the{" "}
+              {formatPolicyDate(decisionDate)} decision
+            </strong>
+            <p>
+              Niyam selected this stored version from policy history. Review its
+              exact wording below; the applicant does not upload the
+              organisation&apos;s policy.
+            </p>
+          </div>
+          {!documentResult ? (
             <>
-              <label htmlFor="policy-ci-text">Or edit policy language</label>
+              <label htmlFor="policy-ci-text">
+                Governing policy text ·{" "}
+                {governingVersion?.id ?? "registered version"}
+              </label>
               <textarea
                 id="policy-ci-text"
                 rows={6}
                 value={policyText}
-                placeholder="Example: Applicants earning up to and including INR 4,00,000 are eligible…"
+                placeholder="The written rule the application must follow…"
                 onChange={(event) => setPolicyText(event.target.value)}
               />
             </>
-          )}
+          ) : null}
+          <details className="policy-replacement">
+            <summary>Use a different official policy (optional)</summary>
+            <p>
+              Only upload here when the official source document changed. Niyam
+              will preserve its pages and tamper-detection fingerprint.
+            </p>
+            <label className="document-drop" htmlFor="policy-document">
+              <DocumentIcon />
+              <span>
+                <strong>Choose policy PDF or text</strong>
+                <small>Maximum 5 MB · source citations preserved</small>
+              </span>
+              <input
+                id="policy-document"
+                type="file"
+                accept="application/pdf,text/plain,.pdf,.txt"
+                disabled={busy === "document"}
+                onChange={(event) =>
+                  void uploadDocument(event.target.files?.[0])
+                }
+              />
+            </label>
+            {documentResult ? (
+              <div className="document-receipt">
+                <strong>{documentResult.filename}</strong>
+                <span>
+                  {documentResult.pages.length} pages ·{" "}
+                  {documentResult.extraction}
+                </span>
+                <code>{compactHash(documentResult.sourceHash)}</code>
+              </div>
+            ) : null}
+          </details>
           {listeningTarget === "policy" ? (
             <ListeningBloom
               language={policyLanguage}
@@ -1288,13 +1334,24 @@ export function PolicyCiWorkbench() {
             />
           ) : null}
           <div className="policy-source-controls">
-            <label htmlFor="effective-from">Effective from</label>
-            <input
-              id="effective-from"
-              type="date"
-              value={effectiveFrom}
-              onChange={(event) => setEffectiveFrom(event.target.value)}
-            />
+            {isDifferentPolicy ? (
+              <>
+                <label htmlFor="effective-from">
+                  New version effective from
+                </label>
+                <input
+                  id="effective-from"
+                  type="date"
+                  value={effectiveFrom}
+                  onChange={(event) => setEffectiveFrom(event.target.value)}
+                />
+              </>
+            ) : (
+              <span className="registered-policy-date">
+                Registered since{" "}
+                {formatPolicyDate(activeVersion?.effectiveFrom)}
+              </span>
+            )}
             <button
               className="voice-trigger"
               type="button"
@@ -1318,8 +1375,10 @@ export function PolicyCiWorkbench() {
               {busy === "draft"
                 ? "AI is reading the policy…"
                 : capabilities?.status === "live-ai-configured"
-                  ? "Read and identify rules with AI"
-                  : "Read and identify the rules"}{" "}
+                  ? isDifferentPolicy
+                    ? "Extract updated rules with AI"
+                    : `Extract rules from ${governingVersion?.id ?? "the policy"} with AI`
+                  : "Extract the governing rules"}{" "}
               <ArrowIcon />
             </button>
           </div>
@@ -1354,12 +1413,12 @@ export function PolicyCiWorkbench() {
         >
           <header>
             <div>
-              <span>Stage 2 · Confirm what the policy means</span>
+              <span>Stage 2 · Confirm the rules used for repair</span>
               <strong>
                 {draft.status === "approved"
-                  ? "Policy interpretation approved"
+                  ? "Rules approved for repair"
                   : draft.status === "awaiting-policy-owner"
-                    ? "Ready for human review"
+                    ? "Ready for policy-owner review"
                     : draft.status.replaceAll("-", " ")}
               </strong>
             </div>
@@ -1386,16 +1445,27 @@ export function PolicyCiWorkbench() {
               </code>
             </div>
           ) : null}
-          <div className="policy-diff" aria-label="Textual policy diff">
-            {draft.textualDiff.map((line, index) => (
-              <code
-                key={`${line}-${index}`}
-                data-kind={line.startsWith("+") ? "add" : "remove"}
-              >
-                {line}
-              </code>
-            ))}
-          </div>
+          {draft.textualDiff.length ? (
+            <div className="policy-diff" aria-label="Textual policy diff">
+              {draft.textualDiff.map((line, index) => (
+                <code
+                  key={`${line}-${index}`}
+                  data-kind={line.startsWith("+") ? "add" : "remove"}
+                >
+                  {line}
+                </code>
+              ))}
+            </div>
+          ) : (
+            <div className="policy-source-confirmation">
+              <CheckIcon />
+              <span>
+                <strong>No policy change proposed</strong>
+                Niyam is confirming the already-approved governing wording
+                before repairing the application.
+              </span>
+            </div>
+          )}
           {draft.ambiguities.length ? (
             <div className="ambiguity-register">
               {draft.ambiguities.map((issue, index) => (
@@ -1426,8 +1496,8 @@ export function PolicyCiWorkbench() {
               {blockingIssues.length
                 ? `${blockingIssues.length} unclear policy issues · stopped for human clarification`
                 : draft.status === "approved"
-                  ? "Policy owner approved this meaning · code repair unlocked"
-                  : "No ambiguous wording found · a policy owner must still approve the meaning"}
+                  ? "Policy owner confirmed these rules · code repair unlocked"
+                  : "No unclear wording found · a policy owner must still confirm these rules"}
             </span>
             <button
               type="button"
@@ -1439,8 +1509,8 @@ export function PolicyCiWorkbench() {
               onClick={approveDraft}
             >
               {draft.status === "approved"
-                ? "Policy interpretation approved"
-                : "Approve policy interpretation"}{" "}
+                ? "Rules approved"
+                : "Approve these rules"}{" "}
               <CheckIcon />
             </button>
           </footer>
@@ -1700,66 +1770,64 @@ export function PolicyCiWorkbench() {
                       {compactHash(evidence.signature.publicKeyFingerprint)}
                     </code>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      downloadText(
-                        evidence.filename,
-                        "application/json",
-                        JSON.stringify(evidence, null, 2),
-                      )
-                    }
-                  >
-                    Download signed evidence
-                  </button>
+                  <div className="evidence-download-actions">
+                    <button
+                      type="button"
+                      disabled={!evidenceVerification?.valid}
+                      onClick={() => {
+                        if (!evidenceVerification) return;
+                        downloadBytes(
+                          evidenceReportFilename(evidence),
+                          "application/pdf",
+                          buildEvidenceReportPdf(
+                            evidence,
+                            evidenceVerification,
+                          ),
+                        );
+                        setStatus(
+                          "Readable verification report downloaded. The signed JSON remains available for independent machine verification.",
+                        );
+                      }}
+                    >
+                      Download verification report (PDF)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadText(
+                          evidence.filename,
+                          "application/json",
+                          JSON.stringify(evidence, null, 2),
+                        )
+                      }
+                    >
+                      Download signed data (JSON)
+                    </button>
+                  </div>
                 </div>
               ) : null}
-              <details className="github-publisher">
-                <summary>
-                  Open the approved code change for GitHub review
-                </summary>
-                <label htmlFor="github-repository">
-                  Repository (owner/name)
-                </label>
-                <input
-                  id="github-repository"
-                  value={repository}
-                  placeholder="owner/decision-app"
-                  onChange={(event) => setRepository(event.target.value)}
-                />
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={confirmPublish}
-                    onChange={(event) =>
-                      setConfirmPublish(event.target.checked)
-                    }
-                  />
-                  I confirm this publishes the approved code copy and opens a
-                  GitHub pull request (code review).
-                </label>
+              <details className="review-package">
+                <summary>Prepare the approved code change for review</summary>
+                <p>
+                  The public demonstration never asks for repository
+                  credentials. Download the verified patch and attach it to your
+                  organisation&apos;s normal GitHub review process.
+                </p>
                 <button
                   type="button"
-                  disabled={
-                    !confirmPublish ||
-                    !repository ||
-                    !approvalRoles.has("policy-owner") ||
-                    !approvalRoles.has("engineer") ||
-                    busy === "publish"
-                  }
-                  onClick={publishPullRequest}
+                  onClick={() => {
+                    downloadText(
+                      `niyam-${repair.runId}-verified-repair.patch`,
+                      "text/x-diff",
+                      repair.patch,
+                    );
+                    setStatus(
+                      "Verified code change downloaded for engineering review. Nothing was pushed or merged automatically.",
+                    );
+                  }}
                 >
-                  Open GitHub code review
+                  Download verified code change (.patch)
                 </button>
-                {repair.pullRequest.url ? (
-                  <a
-                    href={repair.pullRequest.url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open the GitHub code review
-                  </a>
-                ) : null}
               </details>
             </div>
           ) : null}
@@ -1785,7 +1853,7 @@ export function PolicyCiWorkbench() {
             <LockIcon />
             <span>
               <small>Human policy approval required</small>
-              <strong>Approve the policy interpretation first</strong>
+              <strong>Approve the governing rules first</strong>
             </span>
           </span>
           <div
@@ -1893,9 +1961,7 @@ export function PolicyCiWorkbench() {
             </span>
             <span>
               <small>Code review</small>
-              <code>
-                confirmed GitHub code review · future policy/code checks
-              </code>
+              <code>verified patch for review · future policy/code checks</code>
             </span>
           </div>
         </section>

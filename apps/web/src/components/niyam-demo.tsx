@@ -57,7 +57,7 @@ const PROOF_CHAIN = [
       "A policy owner and an engineer approve before the repair can enter code review.",
     artifact: "Signed evidence + confirmed code review + future policy checks",
     technical:
-      "Tamper-evident signature (Ed25519) · GitHub code review · automatic policy checks",
+      "Tamper-evident signature (Ed25519) · verified review package · automatic policy checks",
     tone: "evidence",
   },
 ] as const;
@@ -318,7 +318,7 @@ export function NiyamDemo() {
             <ul>
               <li>Policy owner and engineer approvals</li>
               <li>Tamper-evident signed evidence (Ed25519)</li>
-              <li>GitHub code review only after confirmation</li>
+              <li>Verified code-review package only after confirmation</li>
               <li>
                 Future policy/code mismatches blocked automatically before merge
               </li>

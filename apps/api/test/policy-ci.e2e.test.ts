@@ -75,6 +75,39 @@ describe("Niyam Policy CI", () => {
     );
   });
 
+  it("confirms the stored governing policy without inventing a new version", async () => {
+    const workspace = await request(app.getHttpServer())
+      .get("/api/v1/policy-ci/workspace")
+      .expect(200);
+    const governing = workspace.body.activeVersion;
+    const draft = await request(app.getHttpServer())
+      .post("/api/v1/policy-ci/drafts")
+      .send({
+        policyText: governing.policyText,
+        language: "en",
+        effectiveFrom: governing.effectiveFrom,
+      })
+      .expect(201);
+    expect(draft.body.textualDiff).toEqual([]);
+
+    const approval = await request(app.getHttpServer())
+      .post(`/api/v1/policy-ci/drafts/${draft.body.id}/approve`)
+      .send({
+        approver: {
+          id: "governing-policy-reviewer",
+          name: "Policy owner",
+          role: "policy-owner",
+        },
+      })
+      .expect(201);
+    expect(approval.body.version.id).toBe("policy-v3");
+
+    const after = await request(app.getHttpServer())
+      .get("/api/v1/policy-ci/workspace")
+      .expect(200);
+    expect(after.body.versions).toHaveLength(3);
+  });
+
   it("creates, explicitly approves, and impact-tests a judge policy", async () => {
     const draft = await request(app.getHttpServer())
       .post("/api/v1/policy-ci/drafts")
@@ -303,6 +336,25 @@ describe("Niyam Policy CI", () => {
         .post(`/api/v1/policy-ci/repairs/${runId}/approvals`)
         .send({ approver })
         .expect(201);
+    }
+
+    const previousGhToken = process.env.GH_TOKEN;
+    const previousGithubToken = process.env.GITHUB_TOKEN;
+    delete process.env.GH_TOKEN;
+    delete process.env.GITHUB_TOKEN;
+    try {
+      await request(app.getHttpServer())
+        .post(`/api/v1/policy-ci/repairs/${runId}/publish`)
+        .send({ repository: "owner/decision-app", confirmPublish: true })
+        .expect(503)
+        .expect((response) => {
+          expect(response.body.message).toContain(
+            "GitHub publishing is not connected",
+          );
+        });
+    } finally {
+      if (previousGhToken) process.env.GH_TOKEN = previousGhToken;
+      if (previousGithubToken) process.env.GITHUB_TOKEN = previousGithubToken;
     }
 
     const evidence = await request(app.getHttpServer())

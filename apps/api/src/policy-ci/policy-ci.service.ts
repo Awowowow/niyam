@@ -578,12 +578,19 @@ export class PolicyCiService {
       approvedBy: "Awaiting policy-owner approval",
     });
     const active = this.versions.find((item) => item.status === "active");
-    const textualDiff = [
-      ...(active
-        ? active.policyText.split(/(?<=[.!?])\s+/).map((line) => `- ${line}`)
-        : []),
-      ...policyText.split(/(?<=[.!?])\s+/).map((line) => `+ ${line}`),
-    ];
+    const sameAsActive =
+      active?.policyText.replace(/\s+/g, " ").trim() ===
+      policyText.replace(/\s+/g, " ").trim();
+    const textualDiff = sameAsActive
+      ? []
+      : [
+          ...(active
+            ? active.policyText
+                .split(/(?<=[.!?])\s+/)
+                .map((line) => `- ${line}`)
+            : []),
+          ...policyText.split(/(?<=[.!?])\s+/).map((line) => `+ ${line}`),
+        ];
     const blocking = ambiguities.some((item) => item.severity === "blocking");
     const draft: PolicyDraftRecord = {
       id: id("draft"),
@@ -640,6 +647,25 @@ export class PolicyCiService {
     if (!draft.compilation)
       throw new BadRequestException("Draft has no executable contract");
     const previous = this.versions.find((item) => item.status === "active");
+    const confirmsExistingVersion = Boolean(
+      previous &&
+      previous.effectiveFrom === draft.effectiveFrom &&
+      previous.policyText.replace(/\s+/g, " ").trim() ===
+        draft.policyText.replace(/\s+/g, " ").trim(),
+    );
+    if (previous && confirmsExistingVersion) {
+      draft.status = "approved";
+      draft.approvedVersionId = previous.id;
+      draft.compilation = {
+        ...draft.compilation,
+        policy: previous.policy,
+      };
+      return {
+        draft,
+        version: previous,
+        impact: this.impactBetween(previous.policy, previous.policy),
+      };
+    }
     const sequence =
       Math.max(...this.versions.map((item) => item.sequence)) + 1;
     const approvedAt = new Date().toISOString();

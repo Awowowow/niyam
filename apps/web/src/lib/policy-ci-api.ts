@@ -12,6 +12,7 @@ export interface AmbiguityIssue {
 export interface PolicyVersion {
   id: string;
   sequence: number;
+  policyText: string;
   effectiveFrom: string;
   effectiveTo?: string;
   amendmentNote: string;

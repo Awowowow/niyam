@@ -30,7 +30,7 @@ No. The UI gate is backed by server enforcement. Evidence signing and pull-reque
 
 ## Does it touch production?
 
-No. Repair happens in an isolated temporary Git repository and branch. The preview is a verified isolated process. Publishing a pull request requires two approvals, a repository name, and an explicit confirmation; automatic merge and production deployment do not exist.
+No. Repair happens in an isolated temporary Git repository and branch. The public demo exports the verified patch after two approvals without requesting repository credentials. A privately connected deployment can publish a pull request, but automatic merge and production deployment do not exist.
 
 ## What happens to unclear or scanned policies?
 

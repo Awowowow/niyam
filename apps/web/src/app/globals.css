@@ -3703,6 +3703,23 @@ summary:focus-visible {
   line-height: 1.55;
 }
 
+.complaint-proof > .governing-policy-receipt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background: var(--mint-soft);
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.governing-policy-receipt svg {
+  width: 16px;
+  flex: 0 0 auto;
+  color: var(--mint);
+}
+
 .complaint-proof > footer {
   display: flex;
   gap: 8px;
@@ -3754,6 +3771,71 @@ summary:focus-visible {
   height: 1px;
   overflow: hidden;
   clip: rect(0 0 0 0);
+}
+
+.governing-policy-context {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 18px;
+  padding: 16px 17px;
+  border: 1px solid rgba(63, 78, 198, 0.24);
+  border-radius: 11px 3px 11px 3px;
+  background: var(--mist-blue);
+}
+
+.governing-policy-context > span {
+  color: var(--blue-deep);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.governing-policy-context > strong {
+  font-family: var(--display);
+  font-size: 18px;
+  font-variation-settings: "wdth" 88;
+}
+
+.governing-policy-context > p,
+.policy-replacement > p,
+.review-package > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.policy-replacement {
+  margin-top: 14px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px 2px 8px 2px;
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+}
+
+.policy-replacement summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.policy-replacement[open] {
+  display: grid;
+  gap: 12px;
+}
+
+.policy-replacement .document-drop {
+  min-height: 72px;
+}
+
+.registered-policy-date {
+  grid-column: 1 / 3;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .document-receipt {
@@ -3848,6 +3930,34 @@ summary:focus-visible {
 .policy-diff code[data-kind="remove"] {
   background: rgba(255, 97, 84, 0.12);
   color: #ffaaa3;
+}
+
+.policy-source-confirmation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--mint-soft);
+}
+
+.policy-source-confirmation svg {
+  width: 20px;
+  flex: 0 0 auto;
+  color: var(--mint);
+}
+
+.policy-source-confirmation > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.policy-source-confirmation strong {
+  color: var(--ink);
+  font-size: 13px;
 }
 
 .ambiguity-register {
@@ -4064,7 +4174,8 @@ summary:focus-visible {
 .verification-ledger,
 .dual-approval-gate,
 .signed-evidence-seal,
-.github-publisher {
+.github-publisher,
+.review-package {
   background: var(--paper);
 }
 
@@ -4893,7 +5004,8 @@ html[data-niyam-theme="dark"]:not([data-niyam-contrast="high"])
 
 .dual-approval-gate button,
 .signed-evidence-seal button,
-.github-publisher button {
+.github-publisher button,
+.review-package button {
   display: inline-flex;
   min-height: 40px;
   align-items: center;
@@ -4961,6 +5073,45 @@ html[data-niyam-theme="dark"]:not([data-niyam-contrast="high"])
 .signed-evidence-seal strong {
   font-family: var(--display);
   font-size: 22px;
+}
+
+.evidence-download-actions {
+  display: flex !important;
+  grid-template-columns: none !important;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px !important;
+}
+
+.evidence-download-actions button:first-child {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: white;
+}
+
+.review-package {
+  grid-column: 1 / -1;
+  padding: 18px 23px;
+}
+
+.review-package summary {
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.review-package[open] {
+  display: grid;
+  gap: 12px;
+}
+
+.review-package[open] summary {
+  margin-bottom: 3px;
+}
+
+.review-package > button {
+  width: fit-content;
 }
 
 .github-publisher {
@@ -6018,7 +6169,8 @@ html[data-niyam-contrast="high"] section {
   .verification-ledger,
   .dual-approval-gate,
   .signed-evidence-seal,
-  .github-publisher {
+  .github-publisher,
+  .review-package {
     grid-column: auto;
   }
 
@@ -6055,6 +6207,25 @@ html[data-niyam-contrast="high"] section {
   .signed-evidence-seal > div {
     align-items: flex-start;
     grid-template-columns: 1fr;
+  }
+
+  .signed-evidence-seal {
+    flex-direction: column;
+  }
+
+  .signed-evidence-seal > div {
+    width: 100%;
+  }
+
+  .evidence-download-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .evidence-download-actions button,
+  .review-package > button {
+    width: 100%;
+    justify-content: center;
   }
 
   .github-publisher[open] {

@@ -29,7 +29,7 @@ Niyam is not a policy chatbot and the AI is not the eligibility judge. AI reads 
 - The original rejection is replayed before and after the repair.
 - The independent verifier runs 112 exact-limit and interaction cases and reports the demonstrated rule-path coverage. It does not claim universal formal verification.
 - The exported evidence includes policy and document fingerprints, source citations, the faulty line, patch, commit, test results, before/after replay, approvals, and a tamper-evident Ed25519 signature.
-- A confirmed GitHub pull request can be opened for code review only after both required approvals. Niyam never merges or deploys the change automatically.
+- After both required approvals, the public demo exports a verified patch for the organisation's normal code-review process. A privately connected deployment can open a GitHub pull request; Niyam never merges or deploys the change automatically.
 
 ## Why AI is essential—and bounded
 
